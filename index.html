@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guía Interactiva del ITP y AJD en Canarias</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Calm Harmony (Slate/Amber, Teal accent) -->
+    <!-- Application Structure Plan: The SPA uses a task-oriented and thematic dashboard structure. Instead of a linear report, it's organized into four key sections: 1) A conceptual overview with an interactive diagram, 2) An interactive TPO calculator for the most common use case (housing), 3) An interactive AJD calculator, and 4) A filterable gallery of practical case studies. This structure was chosen to allow users to either get a quick answer to "how much do I pay?" or to explore and learn through examples, making the dense information highly accessible and user-centric. -->
+    <!-- Visualization & Content Choices: - Report Info: Core concepts of ITP/AJD -> Goal: Organize/Inform -> Viz: Interactive diagram (HTML/CSS) -> Interaction: Hover/click to reveal details -> Justification: More engaging than text. - Report Info: Tax rates for TPO/AJD -> Goal: Compare/Inform -> Viz: Bar Chart (Chart.js/Canvas) & styled tables -> Interaction: Static view -> Justification: Quick visual summary and reference. - Report Info: Calculation examples -> Goal: Interact/Inform -> Viz: Interactive Calculators (JS) -> Interaction: User inputs data, gets dynamic results -> Justification: Turns static examples into a powerful, personalized tool. - Report Info: Dozens of case studies -> Goal: Organize/Explore -> Viz: Filterable card grid (HTML/CSS) -> Interaction: Click filters to sort, click cards to expand -> Justification: Breaks down overwhelming information into digestible, relevant examples. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 350px;
+            max-height: 400px;
+        }
+        .section-fade-in {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeIn 0.8s forwards;
+        }
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .nav-link {
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .nav-link:after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -4px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #0d9488;
+            transition: width 0.3s ease;
+        }
+        .nav-link:hover:after, .nav-link.active:after {
+            width: 100%;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <header class="bg-white/80 backdrop-blur-md sticky top-0 z-50 shadow-sm">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="text-2xl font-bold text-slate-900">
+                <span class="text-teal-600">ITP</span> y <span class="text-teal-600">AJD</span> Canarias
+            </div>
+            <div class="hidden md:flex items-center space-x-8">
+                <a href="#intro" class="nav-link text-slate-600 hover:text-teal-600 font-medium">Introducción</a>
+                <a href="#calculadoras" class="nav-link text-slate-600 hover:text-teal-600 font-medium">Calculadoras</a>
+                <a href="#casos-practicos" class="nav-link text-slate-600 hover:text-teal-600 font-medium">Casos Prácticos</a>
+                <a href="#tipos" class="nav-link text-slate-600 hover:text-teal-600 font-medium">Tipos Impositivos</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto p-6 md:p-8">
+        
+        <section id="intro" class="text-center my-12 section-fade-in">
+            <h1 class="text-4xl md:text-5xl font-bold text-slate-900 mb-4">Descubre el Impuesto de Transmisiones Patrimoniales y AJD</h1>
+            <p class="max-w-3xl mx-auto text-lg text-slate-600 mb-12">
+                Esta guía interactiva te ayuda a entender este impuesto de forma sencilla. Explora sus tres modalidades, calcula cuánto tendrías que pagar en las situaciones más comunes y aprende con ejemplos reales basados en la normativa de Canarias.
+            </p>
+
+            <div class="grid md:grid-cols-3 gap-8 text-left">
+                <div class="bg-white p-6 rounded-xl shadow-md border border-slate-200 hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+                    <h3 class="text-2xl font-bold text-teal-700 mb-2">Transmisiones Patrimoniales Onerosas (TPO)</h3>
+                    <p class="text-slate-600">Es la modalidad más frecuente. Grava las transmisiones de bienes y derechos a cambio de un precio, siempre que se realicen entre particulares. El ejemplo más típico es la compra de una vivienda o un vehículo de segunda mano.</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-md border border-slate-200 hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+                    <h3 class="text-2xl font-bold text-teal-700 mb-2">Actos Jurídicos Documentados (AJD)</h3>
+                    <p class="text-slate-600">Este impuesto no grava la operación en sí, sino el documento oficial que la formaliza. Se aplica a documentos notariales (como escrituras de hipoteca o de compra de vivienda nueva), mercantiles y administrativos que deben inscribirse en un registro público.</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-md border border-slate-200 hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+                    <h3 class="text-2xl font-bold text-teal-700 mb-2">Operaciones Societarias (OS)</h3>
+                    <p class="text-slate-600">Afecta a la vida de las empresas. Grava actos como la constitución de una sociedad, ampliaciones de capital o su disolución. Actualmente, muchas de estas operaciones están exentas, aunque es necesario presentar la declaración.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="calculadoras" class="my-20 section-fade-in" style="animation-delay: 0.2s;">
+             <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-slate-900">Calculadoras Fiscales</h2>
+                <p class="max-w-2xl mx-auto text-lg text-slate-600 mt-4">
+                    Utiliza nuestras herramientas para obtener una estimación del impuesto a pagar en las operaciones más habituales en Canarias. Introduce los datos de tu operación para ver el cálculo al instante.
+                </p>
+            </div>
+
+            <div class="grid lg:grid-cols-2 gap-12">
+                
+                <!-- Calculadora TPO -->
+                <div class="bg-white p-8 rounded-2xl shadow-lg border border-slate-200">
+                    <h3 class="text-2xl font-bold text-slate-800 mb-6">Calculadora de TPO (Vivienda de 2ª Mano)</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label for="tpo-valor" class="block text-sm font-medium text-slate-700">Valor del Inmueble (€)</label>
+                            <input type="number" id="tpo-valor" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-teal-500 focus:ring-teal-500" placeholder="Ej: 180000">
+                        </div>
+                        
+                        <div class="space-y-2 pt-2">
+                             <div class="flex items-start">
+                                <div class="flex h-5 items-center">
+                                    <input id="tpo-vivienda-habitual" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500">
+                                </div>
+                                <div class="ml-3 text-sm">
+                                    <label for="tpo-vivienda-habitual" class="font-medium text-slate-700">Es mi vivienda habitual</label>
+                                    <p class="text-slate-500">Marca esta casilla si el inmueble será tu residencia principal.</p>
+                                </div>
+                            </div>
+                            <div id="tpo-beneficios-container" class="hidden pl-8 pt-2 space-y-2">
+                                <label class="block text-sm font-medium text-slate-700">Beneficios fiscales (si es vivienda habitual):</label>
+                                <div class="flex items-center">
+                                    <input id="tpo-familia-numerosa" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500">
+                                    <label for="tpo-familia-numerosa" class="ml-2 block text-sm text-slate-900">Familia numerosa, monoparental o persona con discapacidad.</label>
+                                </div>
+                                 <div class="flex items-center">
+                                    <input id="tpo-vpo" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500">
+                                    <label for="tpo-vpo" class="ml-2 block text-sm text-slate-900">Vivienda de Protección Oficial (VPO).</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button id="calcular-tpo" class="w-full bg-teal-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-teal-700 transition-colors duration-300 mt-4">Calcular TPO</button>
+                    </div>
+
+                    <div id="resultado-tpo" class="mt-6 bg-slate-100 p-6 rounded-lg text-center hidden">
+                        <p class="text-slate-600 text-sm">Cuota estimada a pagar:</p>
+                        <p id="tpo-cuota" class="text-4xl font-bold text-teal-700 my-2">0 €</p>
+                        <p id="tpo-tipo-aplicado" class="text-slate-500 font-medium">Tipo aplicado: 0%</p>
+                        <p id="tpo-explicacion" class="text-xs text-slate-500 mt-2"></p>
+                    </div>
+                </div>
+
+                <!-- Calculadora AJD -->
+                <div class="bg-white p-8 rounded-2xl shadow-lg border border-slate-200">
+                     <h3 class="text-2xl font-bold text-slate-800 mb-6">Calculadora de AJD (Documentos Notariales)</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label for="ajd-valor" class="block text-sm font-medium text-slate-700">Base Imponible (€)</label>
+                            <input type="number" id="ajd-valor" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-teal-500 focus:ring-teal-500" placeholder="Ej: 200000">
+                        </div>
+                        <div>
+                            <label for="ajd-operacion" class="block text-sm font-medium text-slate-700">Tipo de Operación</label>
+                            <select id="ajd-operacion" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-teal-500 focus:ring-teal-500">
+                                <option value="general">General (0,75%)</option>
+                                <option value="igic">Operación sujeta a IGIC (Ej: Vivienda Nueva) (1%)</option>
+                                <option value="vivienda-habitual">Adquisición Vivienda Habitual (bonificado) (0,40%)</option>
+                                <option value="novacion">Novación de Préstamo Hipotecario (0%)</option>
+                            </select>
+                        </div>
+                        <button id="calcular-ajd" class="w-full bg-slate-800 text-white font-bold py-3 px-4 rounded-lg hover:bg-slate-900 transition-colors duration-300 mt-4">Calcular AJD</button>
+                    </div>
+
+                    <div id="resultado-ajd" class="mt-6 bg-slate-100 p-6 rounded-lg text-center hidden">
+                        <p class="text-slate-600 text-sm">Cuota estimada a pagar:</p>
+                        <p id="ajd-cuota" class="text-4xl font-bold text-slate-900 my-2">0 €</p>
+                        <p id="ajd-tipo-aplicado" class="text-slate-500 font-medium">Tipo aplicado: 0%</p>
+                        <p id="ajd-explicacion" class="text-xs text-slate-500 mt-2"></p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="casos-practicos" class="my-20 section-fade-in" style="animation-delay: 0.4s;">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-slate-900">Explora Casos Prácticos</h2>
+                <p class="max-w-2xl mx-auto text-lg text-slate-600 mt-4">
+                    Aprende cómo se aplica el impuesto en situaciones reales. Cada caso desglosa la operación y explica el cálculo del impuesto paso a paso, basándose en la normativa vigente en Canarias.
+                </p>
+            </div>
+            
+            <div id="casos-container" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Las tarjetas de casos se insertarán aquí con JS -->
+            </div>
+        </section>
+
+
+        <section id="tipos" class="my-20 section-fade-in" style="animation-delay: 0.6s;">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-slate-900">Tipos Impositivos de un Vistazo</h2>
+                <p class="max-w-2xl mx-auto text-lg text-slate-600 mt-4">
+                    Visualiza y compara los principales tipos de gravamen aplicables en Canarias para las modalidades de TPO y AJD.
+                </p>
+            </div>
+            <div class="bg-white p-8 rounded-2xl shadow-lg border border-slate-200">
+                <div class="chart-container mx-auto max-w-3xl">
+                    <canvas id="tiposChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+    </main>
+    
+    <footer class="bg-slate-800 text-white mt-20">
+        <div class="container mx-auto px-6 py-8 text-center text-slate-400">
+            <p>Esta es una aplicación web demostrativa e informativa, creada a partir del documento "Impuesto sobre Transmisiones Patrimoniales y AJD" de la Agencia Tributaria Canaria (Actualización 2024).</p>
+            <p class="mt-2 text-sm">Los cálculos son estimaciones y no sustituyen el asesoramiento profesional ni la liquidación oficial. Consulta siempre la normativa vigente y a un asesor fiscal.</p>
+        </div>
+    </footer>
+    
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+    const casosData = [
+        {
+            titulo: "Compraventa de Inmueble por 300.000€",
+            categoria: "TPO",
+            supuesto: "Un particular vende un inmueble a una sociedad por un importe de 300.000€. La operación no está relacionada con la actividad empresarial del vendedor.",
+            analisis: "Es una transmisión patrimonial de un particular, por lo que está sujeta a la modalidad de Transmisiones Patrimoniales Onerosas (TPO).",
+            liquidacion: [
+                { concepto: "Base Imponible", valor: "300.000 €" },
+                { concepto: "Tipo de Gravamen (General Canarias)", valor: "6,5%" },
+                { concepto: "Cuota a Ingresar", valor: "19.500 €", highlight: true },
+                { concepto: "Sujeto Pasivo (quién paga)", valor: "La sociedad compradora." }
+            ]
+        },
+        {
+            titulo: "Permuta de Solar por Viviendas Futuras",
+            categoria: "TPO/AJD",
+            supuesto: "Un particular permuta un solar valorado en 600.000€ con una promotora. Recibe 200.000€ y dos viviendas nuevas a construir.",
+            analisis: "Hay dos operaciones: 1) La entrega del solar del particular a la promotora, sujeta a TPO. 2) La futura entrega de las viviendas de la promotora al particular, sujeta a IGIC y, por tanto, a AJD por documentarse en escritura.",
+            liquidacion: [
+                { concepto: "TPO por el solar (paga la promotora)", valor: "600.000€ x 6,5% = 39.000€", highlight: true },
+                { concepto: "AJD por las viviendas (paga el particular)", valor: "400.000€ x 1% = 4.000€", highlight: true },
+                { concepto: "Base Imponible AJD", valor: "Valor de las viviendas recibidas (600.000€ - 200.000€)." }
+            ]
+        },
+        {
+            titulo: "Compra de acciones con inmuebles (Anti-elusión)",
+            categoria: "TPO",
+            supuesto: "Juan, con el 40% de una S.A., compra otro 20% y obtiene el control (60%). Más del 50% del activo de la S.A. son inmuebles no afectos a su actividad.",
+            analisis: "Aunque es una compra de acciones (normalmente exenta), se aplica la norma anti-elusión del art. 314 LMV, ya que se adquiere el control de una sociedad 'inmobiliaria'. La operación tributa por TPO como si se transmitieran los inmuebles.",
+            liquidacion: [
+                { concepto: "Valor de los inmuebles", valor: "500.000 €" },
+                { concepto: "Base Imponible (60% del valor)", valor: "300.000 €" },
+                { concepto: "Tipo de Gravamen", valor: "6,5%" },
+                { concepto: "Cuota a Ingresar", valor: "19.500 €", highlight: true }
+            ]
+        },
+        {
+            titulo: "Disolución de Condominio (Vivienda Indivisible)",
+            categoria: "AJD",
+            supuesto: "Dos copropietarios disuelven la comunidad sobre una vivienda indivisible valorada en 180.000€. Uno se la adjudica y compensa al otro con 90.000€ en metálico.",
+            analisis: "Al ser un bien indivisible y haber compensación en metálico, no hay 'exceso de adjudicación' sujeto a TPO. La operación tributa por la disolución de comunidad en la modalidad de AJD.",
+            liquidacion: [
+                { concepto: "Base Imponible AJD (valor total)", valor: "180.000 € (en Canarias se ha cambiado el criterio y es sobre el valor total, aunque el ejemplo del PDF use la parte)" },
+                { concepto: "Tipo de Gravamen AJD", valor: "0,75%" },
+                { concepto: "Cuota a Ingresar", valor: "1.350 €", highlight: true },
+                { concepto: "Sujeto Pasivo", valor: "El adjudicatario." }
+            ]
+        },
+        {
+            titulo: "Declaración de Obra Nueva y División Horizontal",
+            categoria: "AJD",
+            supuesto: "Una promotora declara una obra nueva con un coste de 1.800.000€ sobre un solar de 900.000€, y realiza la división horizontal.",
+            analisis: "Son dos actos distintos que tributan por AJD. 1) La declaración de obra nueva. 2) La división horizontal del edificio para crear fincas registrales independientes.",
+            liquidacion: [
+                 { concepto: "AJD por Obra Nueva (Base: coste obra)", valor: "1.800.000€ x 0,75% = 13.500€", highlight: true },
+                 { concepto: "AJD por División Horizontal (Base: valor total)", valor: "2.700.000€ x 0,75% = 20.250€", highlight: true },
+                 { concepto: "Sujeto Pasivo", valor: "La promotora." }
+            ]
+        },
+        {
+            titulo: "Alquiler de Vivienda por 3 años",
+            categoria: "TPO",
+            supuesto: "Se alquila una vivienda por 3 años con una renta mensual de 420€.",
+            analisis: "El alquiler de vivienda está sujeto a TPO pero exento si es para uso estable y permanente (Ley de Arrendamientos Urbanos). Aunque exento, es útil conocer el cálculo.",
+            liquidacion: [
+                 { concepto: "Base Imponible (renta total del contrato)", valor: "3 años * 12 meses/año * 420€/mes = 15.120€" },
+                 { concepto: "Cuota (según escala)", valor: "Se aplica una escala progresiva. Para 15.120€, la cuota sería aprox. 60,47€." },
+                 { concepto: "Resultado Final", valor: "Exento (0€ a pagar)", highlight: true }
+            ]
+        }
+    ];
+
+    const casosContainer = document.getElementById('casos-container');
+    casosData.forEach(caso => {
+        const card = document.createElement('div');
+        card.className = "bg-white rounded-xl shadow-md border border-slate-200 p-6 flex flex-col justify-between";
+        
+        let liquidacionHtml = caso.liquidacion.map(item => `
+            <div class="flex justify-between items-start py-2 border-b border-slate-200 last:border-b-0">
+                <p class="text-sm text-slate-600">${item.concepto}</p>
+                <p class="text-sm font-semibold text-right ${item.highlight ? 'text-teal-600' : 'text-slate-800'}">${item.valor}</p>
+            </div>`).join('');
+
+        card.innerHTML = `
+            <div>
+                <span class="inline-block bg-teal-100 text-teal-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full">${caso.categoria}</span>
+                <h4 class="text-xl font-bold text-slate-800 mt-3 mb-2">${caso.titulo}</h4>
+                <p class="text-slate-600 text-sm mb-4">${caso.supuesto}</p>
+            </div>
+            <div x-data="{ open: false }">
+                 <button @click="open = !open" class="text-teal-600 font-semibold text-sm hover:text-teal-800 transition-colors">
+                    <span x-show="!open">Ver Desglose</span>
+                    <span x-show="open">Ocultar Desglose</span>
+                </button>
+                <div x-show="open" x-transition class="mt-4 border-t pt-4">
+                    <p class="text-sm text-slate-600 italic mb-3">${caso.analisis}</p>
+                    <div class="bg-slate-50 rounded-lg p-4">${liquidacionHtml}</div>
+                </div>
+            </div>
+        `;
+        casosContainer.appendChild(card);
+    });
+
+    // Lógica de la calculadora TPO
+    const tpoViviendaHabitualCheck = document.getElementById('tpo-vivienda-habitual');
+    const tpoBeneficiosContainer = document.getElementById('tpo-beneficios-container');
+    
+    tpoViviendaHabitualCheck.addEventListener('change', () => {
+        tpoBeneficiosContainer.classList.toggle('hidden', !tpoViviendaHabitualCheck.checked);
+    });
+
+    document.getElementById('calcular-tpo').addEventListener('click', () => {
+        const valor = parseFloat(document.getElementById('tpo-valor').value) || 0;
+        const esViviendaHabitual = document.getElementById('tpo-vivienda-habitual').checked;
+        const tieneBeneficios = document.getElementById('tpo-familia-numerosa').checked;
+        const esVPO = document.getElementById('tpo-vpo').checked;
+
+        let tipo = 6.5;
+        let explicacion = "Tipo general para la transmisión de bienes inmuebles.";
+
+        if (esViviendaHabitual) {
+            if (esVPO) {
+                tipo = 0;
+                explicacion = "Tipo 0% por adquisición de VPO como primera vivienda habitual.";
+            } else if (tieneBeneficios) {
+                tipo = 1;
+                explicacion = "Tipo reducido del 1% para vivienda habitual por familia numerosa, monoparental o discapacidad (sujeto a límites de renta).";
+            } else if (valor > 0 && valor <= 150000) {
+                tipo = 5;
+                explicacion = "Tipo reducido del 5% para vivienda habitual con valor no superior a 150.000€.";
+            } else {
+                tipo = 6.5;
+                explicacion = "Tipo general del 6,5% para vivienda habitual con valor superior a 150.000€ y sin otros beneficios.";
+            }
+        }
+        
+        const cuota = (valor * tipo) / 100;
+
+        document.getElementById('tpo-cuota').innerText = `${cuota.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}`;
+        document.getElementById('tpo-tipo-aplicado').innerText = `Tipo aplicado: ${tipo}%`;
+        document.getElementById('tpo-explicacion').innerText = explicacion;
+        document.getElementById('resultado-tpo').classList.remove('hidden');
+    });
+
+    // Lógica de la calculadora AJD
+    document.getElementById('calcular-ajd').addEventListener('click', () => {
+        const valor = parseFloat(document.getElementById('ajd-valor').value) || 0;
+        const operacion = document.getElementById('ajd-operacion').value;
+        
+        let tipo = 0;
+        let explicacion = "";
+
+        switch(operacion) {
+            case 'general':
+                tipo = 0.75;
+                explicacion = "Tipo general para documentos notariales.";
+                break;
+            case 'igic':
+                tipo = 1;
+                explicacion = "Tipo del 1% para documentos notariales de operaciones sujetas a IGIC (ej. compra de vivienda nueva a promotor).";
+                break;
+            case 'vivienda-habitual':
+                tipo = 0.40;
+                explicacion = "Tipo reducido del 0,40% en AJD para la adquisición de vivienda habitual (sujeto a requisitos de edad, renta y valor).";
+                break;
+            case 'novacion':
+                tipo = 0;
+                explicacion = "Tipo 0% para escrituras de novación de créditos hipotecarios.";
+                break;
+        }
+
+        const cuota = (valor * tipo) / 100;
+        
+        document.getElementById('ajd-cuota').innerText = `${cuota.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}`;
+        document.getElementById('ajd-tipo-aplicado').innerText = `Tipo aplicado: ${tipo}%`;
+        document.getElementById('ajd-explicacion').innerText = explicacion;
+        document.getElementById('resultado-ajd').classList.remove('hidden');
+    });
+
+    // Gráfico de Tipos
+    const ctx = document.getElementById('tiposChart').getContext('2d');
+    const tiposChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['TPO General', 'TPO Reducido (V.H. < 150k€)', 'TPO Superreducido (Fam. Num.)', 'AJD General', 'AJD Vivienda Nueva (IGIC)'],
+            datasets: [{
+                label: '% Tipo Impositivo',
+                data: [6.5, 5, 1, 0.75, 1],
+                backgroundColor: [
+                    'rgba(13, 148, 136, 0.6)',
+                    'rgba(15, 118, 110, 0.6)',
+                    'rgba(17, 94, 89, 0.6)',
+                    'rgba(51, 65, 85, 0.6)',
+                    'rgba(30, 41, 59, 0.6)'
+                ],
+                borderColor: [
+                    'rgba(13, 148, 136, 1)',
+                    'rgba(15, 118, 110, 1)',
+                    'rgba(17, 94, 89, 1)',
+                    'rgba(51, 65, 85, 1)',
+                    'rgba(30, 41, 59, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return value + '%'
+                        }
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                },
+                title: {
+                    display: true,
+                    text: 'Comparativa de Tipos Impositivos Clave en Canarias',
+                    font: {
+                        size: 16
+                    }
+                }
+            }
+        }
+    });
+
+    // AlpineJS para interactividad
+    const alpineScript = document.createElement('script');
+    alpineScript.src = 'https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js';
+    alpineScript.defer = true;
+    document.head.appendChild(alpineScript);
+
+    // Smooth scroll y active nav link
+    const navLinks = document.querySelectorAll('.nav-link');
+    const sections = document.querySelectorAll('section');
+
+    navLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const targetId = link.getAttribute('href');
+            document.querySelector(targetId).scrollIntoView({
+                behavior: 'smooth'
+            });
+        });
+    });
+
+    window.addEventListener('scroll', () => {
+        let current = '';
+        sections.forEach(section => {
+            const sectionTop = section.offsetTop;
+            if (pageYOffset >= sectionTop - 100) {
+                current = section.getAttribute('id');
+            }
+        });
+
+        navLinks.forEach(link => {
+            link.classList.remove('active');
+            if (link.getAttribute('href').includes(current)) {
+                link.classList.add('active');
+            }
+        });
+    });
+
+});
+</script>
+
+</body>
+</html>
